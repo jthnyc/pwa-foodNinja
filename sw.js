@@ -11,6 +11,7 @@ const assets = [
   "/img/dish.png",
   "https://fonts.googleapis.com/icon?family=Material+Icons",
   "https://fonts.gstatic.com/s/materialicons/v67/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+  "/pages/fallback.html",
 ];
 
 // install service worker
@@ -31,7 +32,7 @@ self.addEventListener("activate", (e) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => key !== staticCacheName)
+          .filter((key) => key !== staticCacheName && key !== dynamicCache)
           .map((key) => caches.delete(key))
       );
     })
@@ -42,16 +43,19 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   // console.log("fetch event", e);
   e.respondWith(
-    caches.match(e.request).then((cacheRes) => {
-      return (
-        cacheRes ||
-        fetch(e.request).then((fetchRes) => {
-          return caches.open(dynamicCache).then((cache) => {
-            cache.put(e.request.url, fetchRes.clone());
-            return fetchRes;
-          });
-        })
-      );
-    })
+    caches
+      .match(e.request)
+      .then((cacheRes) => {
+        return (
+          cacheRes ||
+          fetch(e.request).then((fetchRes) => {
+            return caches.open(dynamicCache).then((cache) => {
+              cache.put(e.request.url, fetchRes.clone());
+              return fetchRes;
+            });
+          })
+        );
+      })
+      .catch(() => caches.match("/pages/fallback.html"))
   );
 });
