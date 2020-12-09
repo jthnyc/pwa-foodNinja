@@ -21,6 +21,35 @@ db.collection("recipes").onSnapshot((snapshot) => {
 
     if (change.type === "removed") {
       // remove document data from the web page
+      removeRecipe(change.doc.id);
     }
   });
+});
+
+// add new recipe
+const form = document.querySelector("form");
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const recipe = {
+    title: form.title.value,
+    ingredients: form.ingredients.value,
+  };
+
+  db.collection("recipes")
+    .add(recipe)
+    .catch((err) => console.log(err));
+
+  form.title.value = "";
+  form.ingredients.value = "";
+});
+
+// delete a recipe
+const recipeContainer = document.querySelector(".recipes");
+recipeContainer.addEventListener("click", (e) => {
+  console.log(e);
+  if (e.target.tagName === "I") {
+    const id = e.target.getAttribute("data-id");
+    db.collection("recipes").doc(id).delete();
+  }
 });
